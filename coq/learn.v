@@ -225,6 +225,157 @@ Qed.
 Print e3_uc_1.
     
 Print e3_uc_1_man.
+
+Search "sum_n".
+
+Require Import ArithRing Ring.
+
+
+Fixpoint sum_n n := 
+    match n with 
+    | 0 => 0
+    | S p => p + sum_n p
+    end.
+
+Compute sum_n 3.
+
+Lemma sum_of_first_n_nat_short: forall n, 2 * sum_n n + n = n * n.
+Proof.
+    induction n.
+    reflexivity.
+    assert (SnSn : S n * S n = n * n + 2 * n + 1).
+    ring.
+    rewrite SnSn.
+    rewrite <- IHn.
+    simpl.
+    ring.
+Qed.
+
+Lemma S_add_1: forall n, S n = n + 1.
+Proof.
+    intros.
+    induction n.
+    reflexivity.
+    ring.
+Qed.
+
+
+Lemma Sn_n_plus_1: forall n m, m + S n = S (n + m).
+Proof.
+    intros.
+    induction m.
+    ring.
+    ring.
+Qed.
+
+Lemma sum_of_first_n_nat_man: forall n, 2 * sum_n n + n = n * n.
+Proof.
+    induction n.
+    simpl.
+    reflexivity.
+    simpl sum_n.
+    rewrite Nat.mul_add_distr_l.
+    assert (double_n: 2 * n = n + n).
+    induction n.
+    ring.
+    ring.
+    rewrite double_n.
+    rewrite Nat.add_comm with (m := 2 * sum_n n).
+    rewrite Nat.add_assoc.
+    rewrite IHn.
+    rewrite S_add_1.
+    ring.
+Qed.
+
+Fixpoint evenb n := 
+    match n with 
+    | 0 => true
+    | 1 => false
+    | S (S p) => evenb p
+    end.
+
+Lemma evenb_p_given : forall n, evenb n = true -> exists x, n = 2 * x.
+Proof.
+    assert (Main: forall n, (evenb n = true -> exists x, n = 2 * x) /\
+                            (evenb (S n) = true -> exists x, S n = 2 * x)).
+    induction n.
+    split. 
+        exists 0.  reflexivity.
+        simpl. intros H. discriminate H.
+    split.
+        destruct IHn as [_ IHn_r]. exact IHn_r.
+        simpl evenb. intros H. destruct IHn as [IHn_l _]. 
+        assert (H' : exists x, n = 2 * x).
+        apply IHn_l. apply H.
+        destruct H' as [x q]. exists (x + 1). rewrite q. ring.
+        intros.
+        destruct (Main n) as [mL _]. apply mL. exact H.
+Qed.
+
+Lemma evenb_p_man : forall n, evenb n = true -> exists x, n = 2 * x.
+Proof.
+    assert (C: forall k, (evenb k = true -> exists x, k = 2 * x) /\
+                         (evenb (S k) = true -> exists x, S k = 2 * x)).
+        induction k.
+        split. exists 0. reflexivity.
+        simpl evenb. intro H. discriminate H.
+        split. destruct IHk as [_ IHk_r]. exact IHk_r.
+        simpl evenb. intros H. destruct IHk as [IHk_l _].
+        assert (H': exists x,  k = 2 * x). apply IHk_l. exact H.
+        destruct H' as [x q]. exists (x + 1). rewrite q. ring.
+    induction n.
+    exists 0. reflexivity.
+    destruct (C n) as [_ C_r]. exact C_r.
+Qed.
+
+(*  Ch4 exercise *)
+
+Fixpoint add n m := 
+    match n with
+        | 0 => m
+        | S p => add p (S m)
+    end.
+
+Lemma ch4_add_0: forall k, add 0 k = k.
+Proof.
+    simpl. reflexivity.
+Qed.
+
+Theorem ch4_tp_1: forall n m, add n (S m) = S (add n m).
+Proof.
+    induction n.
+    intro m.
+    apply ch4_add_0.
+    simpl.
+    intro m.
+    rewrite IHn.
+    reflexivity.
+Qed.
+
+Theorem ch4_tp_2: forall n m, add (S n) m = S (add n m).
+Proof.
+    assert (forall n m, add (S n) m = add n (S m)).
+        induction n.
+        simpl. reflexivity.
+        simpl. intro. rewrite <- IHn. reflexivity.
+    intros.
+    rewrite H.
+    apply ch4_tp_1.
+Qed.
+
+Theorem ch4_tp_3: forall n m, add n m = n + m.
+Proof.
+    induction n. apply ch4_add_0.
+    intro.
+    rewrite ch4_tp_2.
+    rewrite IHn.
+    reflexivity.
+Qed.
+
+
+         
+
+                         
     
-
-
+    
+        
