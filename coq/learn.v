@@ -49,7 +49,7 @@ Fixpoint is_sorted l :=
 Fixpoint count n l := 
     match l with
       nil => 0
-    | h::t => if h =? n then 1 + count n t else count n t
+    | h::t => if n =? h then 1 + count n t else count n t
     end.
 
 Search True.
@@ -328,7 +328,7 @@ Proof.
     destruct (C n) as [_ C_r]. exact C_r.
 Qed.
 
-(*  Ch4 exercise *)
+(*  Ch4 exercise 1 *)
 
 Fixpoint add n m := 
     match n with
@@ -372,10 +372,196 @@ Proof.
     reflexivity.
 Qed.
 
+(** Ch4 ex 2 **)
 
-         
+Fixpoint sum_odd_n (n: nat): nat :=
+    match n with
+        | 0 => 0
+        | S p => 1 + 2 * p + sum_odd_n p
+    end.
 
-                         
-    
-    
-        
+Theorem ch4_sum_of_odd_n_sq: forall n: nat, sum_odd_n n = n * n.
+Proof.
+    induction n.
+    simpl. reflexivity.
+    simpl.
+    rewrite IHn.
+    ring.
+Qed.
+
+(** Ch 5 **)
+
+Definition is_zero (x: nat): bool := 
+    match x with 
+        | 0 => true
+        | S _ => false
+    end.
+
+Lemma not_is_zero_pred: forall x,
+    is_zero x = false -> S (Nat.pred x) = x.
+Proof.
+    intros x.
+    unfold is_zero, Nat.pred.
+    destruct x as [ | p].
+    discriminate.
+    intros h. reflexivity.
+Qed.
+
+(** Ch 6 **)
+
+Lemma insert_incr: forall n l, count n (insert n l) = 1 + count n l.
+Proof.
+    intros n l.
+    induction l.
+        simpl.
+        rewrite Nat.eqb_refl. reflexivity.
+    simpl. 
+        case (n <=? a).
+        simpl.
+        rewrite Nat.eqb_refl.
+        reflexivity.
+    simpl.
+        case (n =? a).
+        rewrite IHl.
+        reflexivity.
+    rewrite IHl.
+    reflexivity.
+Qed.
+
+(** Ch 7 **)
+
+Inductive bin: Type := 
+  | L: bin
+  | N: bin -> bin -> bin.
+
+Check N L (N L L).
+
+(** Ch 7 Ex 1 **)
+
+Inductive Et: Type :=
+  | EtC: Et
+  | Et3: nat -> Et -> Et -> Et
+  | Et4: bool -> Et -> Et -> Et -> Et.
+
+Definition Not_NLL(t: bin): bool := 
+    match t with 
+      | N L L => false
+      | _ => true
+    end.
+
+Compute Not_NLL (N L L).
+Compute Not_NLL (N L (N L L)).
+Compute Not_NLL L.
+
+Fixpoint flatten_aux(t1 t2: bin): bin :=
+    match t1 with
+      | L => N L t2
+      | N t'1 t'2 => flatten_aux t'1 (flatten_aux t'2 t2)
+    end.
+
+Compute flatten_aux (N (N L L) (N L L)) L.
+
+Fixpoint flatten(t: bin): bin := 
+    match t with 
+      | L => L
+      | N t1 t2 => flatten_aux t1 (flatten t2)
+    end.
+
+Compute flatten (N (N L (N L L)) (N (N L L) L)).
+
+Fixpoint size(t: bin): nat := 
+    match t with
+      | L => 1
+      | N t1 t2 => 1 + size(t1) + size(t2)
+    end.
+
+Compute size (N L L).
+Compute size (N (N L (N L L)) (N (N L L) L)).
+
+Fixpoint l_count(t: bin): nat := 
+    match t with
+      | L => 1
+      | N t1 t2 => l_count(t1) + l_count(t2)
+    end.
+
+Compute l_count(N L L).
+Compute l_count(N (N L (N L L)) (N (N L L) L)).
+
+Lemma Not_NLL_size: forall t, Not_NLL t = false -> size t = 3.
+Proof.
+    intros t.
+    destruct t.
+    simpl. 
+    discriminate.
+    destruct t1.
+    destruct t2.
+    simpl.
+    intro.
+    reflexivity.
+    simpl.
+    discriminate.
+    simpl.
+    discriminate.
+Qed.
+
+Lemma flatten_aux_size: forall t1 t2: bin, size(flatten_aux t1 t2) = 1 + size(t1) + size(t2).
+Proof.
+    induction t1.
+    intro t2.
+    simpl.
+    reflexivity.
+    intros t2.
+    simpl.
+    rewrite IHt1_1.
+    rewrite IHt1_2.
+    ring.
+Qed.
+
+(** Ch7.5 ex **)
+
+Lemma flatten_size: forall t, size (flatten t) = size t.
+Proof.
+    induction t.
+    reflexivity.
+    simpl flatten.
+    simpl size at 1.
+    rewrite flatten_aux_size.
+    rewrite IHt2.
+    reflexivity.
+Qed.
+
+(** Ch 7.6 **)
+
+Lemma not_subterm_self_l: forall x y, ~ x = N x y.
+Proof.
+    induction x.
+    intros y r.
+    discriminate.
+    intros y r.
+    injection r.
+    intros.
+    assert(IHx1': x1 <>  N x1 x2).
+    apply IHx1.
+    contradiction.
+Qed.
+
+(** Ch 8 **)
+
+Fixpoint fact(n: nat): nat := 
+    match n with 
+        | 0 => 1
+        | S p => n * fact(p)
+    end.
+
+Compute fact(5).
+
+Fixpoint fib(n: nat): nat := 
+    match n with
+        | 0 => 0
+        | S q =>
+            match q with 
+                | 0 => 1
+                | S p => fib p + fib q
+            end
+    end.
+
