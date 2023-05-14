@@ -565,3 +565,62 @@ Fixpoint fib(n: nat): nat :=
             end
     end.
 
+Require Import ZArith.
+
+Open Scope Z_scope.
+
+About Z.iter.
+
+Check fst.
+Check snd.
+
+Definition fact_aux(n: Z): (Z * Z) := 
+    Z.iter n (fun p => (fst p + 1, snd p * (fst p + 1))) (0, 1).
+
+Definition Z_fact(n: Z): Z := snd(fact_aux(n)).
+
+Compute Z_fact(5).
+
+Compute Z_fact(100).
+
+Close Scope Z_scope.
+
+(** Ch 9.1 **)
+
+Inductive even: nat -> Prop :=
+  | even0 : even 0
+  | evenS : forall x: nat, even x -> even (S (S x)).
+
+Lemma even_mult_self: forall x, even x -> exists y, x = 2 * y.
+Proof.
+    intros x H.
+    induction H.
+    exists 0. reflexivity.
+    destruct IHeven. exists (x0 + 1).
+    rewrite Nat.mul_add_distr_l. rewrite <- H0. simpl. ring.
+Qed.
+
+Lemma even_mult: forall x, even x -> exists y, x = 2 * y.
+Proof.
+    intros x H.
+    induction H.
+    exists 0. ring.
+    destruct IHeven as [y Heq]; rewrite Heq.
+    exists (S y); ring.
+Qed.
+
+(** Ch 9.3 **)
+
+Lemma not_even_1: ~ even 1.
+Proof.
+    intros even1.
+    inversion even1.
+Qed.
+
+Lemma even_inv: forall x, even (S (S x)) -> even x.
+Proof.
+    intros x eSSx.
+    inversion eSSx.
+    exact H0.
+Qed.
+
